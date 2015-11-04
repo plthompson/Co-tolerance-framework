@@ -1,15 +1,15 @@
 require(vegan)
 require(MASS)
 
-species<-40
+species<-20
 nStressors<-2
 reps<-100
 co_toleranceV<-c("Random","Positive","Negative")
 Com_types<-c("No interactions","Competitive","Mixed","Foodweb")
 
 #environmental change####
-stress_increase<-8000
-stress<-10
+stress_increase<-5000
+stress<-40
 stressV<-seq(0,stress,length=stress*stress_increase)
 Tmax<-length(stressV)
 
@@ -47,6 +47,7 @@ BB<-BB*weight
 #starting abundances
 X<-array(rep(round(rnorm(n = species,mean = 5,sd = 2)),each=Tmax),dim=c(Tmax,species,nStressors+1,length(Com_types)))
 X[X<=0]<-1
+X[,,,1]<-X[,,,1]*2
 
 for(ct in 1:3){
 #environmental response####
@@ -66,7 +67,6 @@ plot(sensitivity, pch=19, ylim=c(-sensitivity_scaler,0),xlim=c(-sensitivity_scal
 #model####
 for(com in 1:2){
   #intrinsic rate of increase
-  C<-0.125
   C=-BB[,,com]%*%X[1,,1,com]
   for(l in 1:(Tmax-1)){
     Env_resp<-sensitivity[,1]*stressV[l]+sensitivity[,2]*stressV[l]
@@ -86,15 +86,18 @@ srA<-(species-specnumber(X[samp_stress,,2,com]))/species
 srB<-(species-specnumber(X[samp_stress,,3,com]))/species
 srAB<-(species-specnumber(X[samp_stress,,1,com]))/species
 
+
 #biomass
 bA<-(sum(X[1,,2,com])-rowSums(X[samp_stress,,2,com]))/sum(X[1,,2,com])
 bB<-(sum(X[1,,3,com])-rowSums(X[samp_stress,,3,com]))/sum(X[1,,3,com])
 bAB<-(sum(X[1,,1,com])-rowSums(X[samp_stress,,1,com]))/sum(X[1,,1,com])
 
+
 #Bray-Curtis dissimilarity
 bcAB<-c(0,vegdist(X[seq(1,Tmax,length=100),,1,com])[1:99])
 bcA<-c(0,vegdist(X[seq(1,Tmax,length=100),,2,com])[1:99])
 bcB<-c(0,vegdist(X[seq(1,Tmax,length=100),,3,com])[1:99])
+
 
 Co_tolerance_df$SR[Co_tolerance_df$Reps==r & Co_tolerance_df$Co_tolerance==co_toleranceV[ct] & Co_tolerance_df$Com == Com_types[com]]<-srAB-(srA+(1-srA)*srB)
 Co_tolerance_df$Biomass[Co_tolerance_df$Reps==r & Co_tolerance_df$Co_tolerance==co_toleranceV[ct] & Co_tolerance_df$Com == Com_types[com]]<-bAB-(bA+(1-bA)*bB)
@@ -137,3 +140,31 @@ ggplot(summarise(group_by(Co_tolerance_df,Stress,Co_tolerance,Com),Mean=mean(Bra
   geom_abline(intercept=0,slope=0, linetype=2)+
   ylab("Compositional change vs. predicted")
 dev.off()  
+
+
+ggplot(summarise(group_by(Seq_stress_df,Co_tolerance,Com),Mean=mean(SR),SD=sd(SR)),aes(x=Com,y=Mean, group=interaction(Com,Co_tolerance), color=Co_tolerance))+
+  geom_point(size=3)+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=0.1)+
+  #facet_grid(.~Com)+
+  theme_bw(base_size = 15)+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  geom_abline(intercept=0,slope=0, linetype=2)+
+  ylab("Species richness change vs. predicted")
+
+ggplot(summarise(group_by(Seq_stress_df,Co_tolerance,Com),Mean=mean(Biomass),SD=sd(Biomass)),aes(x=Com,y=Mean, group=interaction(Com,Co_tolerance), color=Co_tolerance))+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=0.1)+
+  #facet_grid(.~Com)+
+  theme_bw(base_size = 15)+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  geom_abline(intercept=0,slope=0, linetype=2)+
+  ylab("Biomass change vs. predicted")
+
+ggplot(summarise(group_by(Seq_stress_df,Co_tolerance,Com),Mean=mean(Bray.Curtis),SD=sd(Bray.Curtis)),aes(x=Com,y=Mean, group=interaction(Com,Co_tolerance), color=Co_tolerance))+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=0.1)+
+  #facet_grid(.~Com)+
+  theme_bw(base_size = 15)+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  geom_abline(intercept=0,slope=0, linetype=2)+
+  ylab("Compositional change vs. predicted")

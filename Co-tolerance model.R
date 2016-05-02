@@ -20,26 +20,30 @@ samp_stress<-seq(1,Tmax,by=stress_increase)
 #function for additive null model####
 additive_null<-function(A,B){
   SR<-rep(NA,nrow(A))
-  bmass_loss<-SR
+  SR_bin<-bmass_loss<-SR
   bray<-SR
   if(sum(A[1,])>0 | sum(B[1,])>0){
   hold1<-apply(A,2,function(x){(x[1]-x)/x[1]})+apply(B,2,function(x){(x[1]-x)/x[1]})
   hold1[hold1>1]<-1
   bmass_loss<-rowMeans(hold1*rep(A[1,],each=nrow(hold1)))/mean(A[1,])
   
+  SR<-rowSums(hold1==1)/ncol(hold1)
+  
+  
   hold3<-rep(A[1,],each=nrow(hold1))*(1-hold1)
   bray<-c(0,vegdist(hold3)[1:(nrow(hold3)-1)])
   
-  SR<-rowSums(A==0 | B == 0)/sum(A[1,]>0)} 
-  return(data.frame(SR=SR,Bmass=bmass_loss,Bray=bray))
+  SR_bin<-rowSums(A==0 | B == 0)/sum(A[1,]>0)
+  } 
+  return(data.frame(SR=SR,SR_bin=SR_bin,Bmass=bmass_loss,Bray=bray))
 }
 
 
 #data storage####
 Vary_int.df<-data.frame(SR=NA,Biomass=NA,Bray.Curtis=NA,Stress=stressV[samp_stress], Reps=rep(1:reps,each=length(samp_stress)),Co_sensitivity=factor(rep(Co_sensitivityV,each=length(samp_stress)*reps),levels = c("Positive","Random","Negative"),ordered = T),Int_strength=rep(int_strength,each=length(samp_stress)*reps*length(Co_sensitivityV)),Com_type=rep(Com_types[1:2],each=length(samp_stress)*reps*length(Co_sensitivityV)*length(int_strength)))
 Vary_int_troph.df<-data.frame(SR=NA,Biomass=NA,Bray.Curtis=NA,Stress=stressV[samp_stress], Reps=rep(1:reps,each=length(samp_stress)),Co_sensitivity=factor(rep(Co_sensitivityV,each=length(samp_stress)*reps),levels = c("Positive","Random","Negative"),ordered = T),Int_strength=rep(int_strength,each=length(samp_stress)*reps*length(Co_sensitivityV)),Trophic_level=rep(c("Plant","Herbivore","Carnivore"),each=length(samp_stress)*reps*length(Co_sensitivityV)*length(int_strength)))
-Vary_int.df2<-Vary_int.df
-Vary_int_troph.df2<-Vary_int_troph.df
+Vary_int.df2<-data.frame(SR=NA,SR_bin=NA,Biomass=NA,Bray.Curtis=NA,Stress=stressV[samp_stress], Reps=rep(1:reps,each=length(samp_stress)),Co_sensitivity=factor(rep(Co_sensitivityV,each=length(samp_stress)*reps),levels = c("Positive","Random","Negative"),ordered = T),Int_strength=rep(int_strength,each=length(samp_stress)*reps*length(Co_sensitivityV)),Com_type=rep(Com_types[1:2],each=length(samp_stress)*reps*length(Co_sensitivityV)*length(int_strength)))
+Vary_int_troph.df2<-data.frame(SR=NA,SR_bin=NA,Biomass=NA,Bray.Curtis=NA,Stress=stressV[samp_stress], Reps=rep(1:reps,each=length(samp_stress)),Co_sensitivity=factor(rep(Co_sensitivityV,each=length(samp_stress)*reps),levels = c("Positive","Random","Negative"),ordered = T),Int_strength=rep(int_strength,each=length(samp_stress)*reps*length(Co_sensitivityV)),Trophic_level=rep(c("Plant","Herbivore","Carnivore"),each=length(samp_stress)*reps*length(Co_sensitivityV)*length(int_strength)))
 
 Raw_effects.df<-data.frame(SR=NA,Biomass=NA,Bray.Curtis=NA,Stress=stressV[samp_stress],Stressors=rep(factor(c("A","B","AB","Net_effect"),levels=c("AB","A","B","Net_effect"),ordered = T),each=length(samp_stress)),Reps=rep(1:reps,each=length(samp_stress)*4),Co_sensitivity=factor(rep(Co_sensitivityV,each=length(samp_stress)*reps*4),levels = c("Positive","Random","Negative"),ordered = T),Int_strength=rep(int_strength,each=length(samp_stress)*reps*length(Co_sensitivityV)*4),Com_type=rep(Com_types[1:2],each=length(samp_stress)*reps*length(Co_sensitivityV)*length(int_strength)*4))
 Raw_effects_troph.df<-data.frame(SR=NA,Biomass=NA,Bray.Curtis=NA,Stress=stressV[samp_stress],Stressors=rep(factor(c("A","B","AB"),levels=c("AB","A","B","Net_effect"),ordered = T),each=length(samp_stress)), Reps=rep(1:reps,each=length(samp_stress)*4),Co_sensitivity=factor(rep(Co_sensitivityV,each=length(samp_stress)*reps*4),levels = c("Positive","Random","Negative"),ordered = T),Int_strength=rep(int_strength,each=length(samp_stress)*reps*length(Co_sensitivityV)*4),Trophic_level=rep(c("Plant","Herbivore","Carnivore"),each=length(samp_stress)*reps*length(Co_sensitivityV)*length(int_strength)*4))
@@ -156,7 +160,6 @@ for(com in 1:length(Com_types)){
         X<-array(NA,dim=c(Tmax,species,nStressors+1,length(Com_types)))
         X[1,,,com]<-solve(-BBrun,C)
         
-        
         for(l in 1:(Tmax-1)){
           Env_resp<-sensitivity[,1]*stressV[l]+sensitivity[,2]*stressV[l]
           X[l+1,,1,com]<-X[l,,1,com]*exp(C+BBrun%*%X[l,,1,com]+Env_resp)
@@ -241,16 +244,16 @@ for(com in 1:length(Com_types)){
           Vary_int_troph.df$Bray.Curtis[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Carnivore"]<-bcAB_pred-(bcA_pred+(1-bcA_pred)*bcB_pred)
           
           add.null<-additive_null(A_plants,B_plants)
-          DF_plants<-data.frame(SR=srAB_prey-add.null$SR,Biomass=bAB_prey-add.null$Bmass,Bray.Curtis=bcAB_prey-add.null$Bray)
-          Vary_int_troph.df2[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Plant",1:3]<-DF_plants
+          DF_plants<-data.frame(SR=srAB_prey-add.null$SR,SR_bin=srAB_prey-add.null$SR_bin,Biomass=bAB_prey-add.null$Bmass,Bray.Curtis=bcAB_prey-add.null$Bray)
+          Vary_int_troph.df2[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Plant",1:4]<-DF_plants
           
           add.null<-additive_null(A_herb,B_herb)
-          DF_herb<-data.frame(SR=srAB_herb-add.null$SR,Biomass=bAB_herb-add.null$Bmass,Bray.Curtis=bcAB_herb-add.null$Bray)
-          Vary_int_troph.df2[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Herbivore",1:3]<-DF_herb
+          DF_herb<-data.frame(SR=srAB_herb-add.null$SR,SR_bin=srAB_herb-add.null$SR_bin,Biomass=bAB_herb-add.null$Bmass,Bray.Curtis=bcAB_herb-add.null$Bray)
+          Vary_int_troph.df2[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Herbivore",1:4]<-DF_herb
           
           add.null<-additive_null(A_pred,B_pred)
-          DF_pred<-data.frame(SR=srAB_pred-add.null$SR,Biomass=bAB_pred-add.null$Bmass,Bray.Curtis=bcAB_pred-add.null$Bray)
-          Vary_int_troph.df2[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Carnivore",1:3]<-DF_pred
+          DF_pred<-data.frame(SR=srAB_pred-add.null$SR,SR_bin=srAB_pred-add.null$SR_bin,Biomass=bAB_pred-add.null$Bmass,Bray.Curtis=bcAB_pred-add.null$Bray)
+          Vary_int_troph.df2[Vary_int_troph.df$Reps==r & Vary_int_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int_troph.df$Int_strength == int_strength[k] & Vary_int_troph.df$Trophic_level == "Carnivore",1:4]<-DF_pred
           
           Raw_effects_troph.df$SR[Raw_effects_troph.df$Reps==r & Raw_effects_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Raw_effects_troph.df$Int_strength == int_strength[k]]<-c(srA_prey,srB_prey,srAB_prey,srA_herb,srB_herb,srAB_herb,srA_pred,srB_pred,srAB_pred,DF_plants$SR,DF_herb$SR,DF_pred$SR)
           Raw_effects_troph.df$Biomass[Raw_effects_troph.df$Reps==r & Raw_effects_troph.df$Co_sensitivity==Co_sensitivityV[ct] & Raw_effects_troph.df$Int_strength == int_strength[k]]<-c(bA_prey,bB_prey,bAB_prey,bA_herb,bB_herb,bAB_herb,bA_pred,bB_pred,bAB_pred,DF_plants$Biomass,DF_herb$Biomass,DF_pred$Biomass)
@@ -282,13 +285,39 @@ for(com in 1:length(Com_types)){
           Vary_int.df$Bray.Curtis[Vary_int.df$Reps==r & Vary_int.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int.df$Int_strength == int_strength[k] & Vary_int.df$Com_type==Com_types[com]]<-bcAB-(bcA+(1-bcA)*bcB)
           
           add.null<-additive_null(A,B)
-          DF<-data.frame(SR=srAB-add.null$SR,Biomass=bAB-add.null$Bmass,Bray.Curtis=bcAB-add.null$Bray)
+          DF<-data.frame(SR=srAB-add.null$SR,SR_bin=srAB-add.null$SR_bin,Biomass=bAB-add.null$Bmass,Bray.Curtis=bcAB-add.null$Bray)
           
-          Vary_int.df2[Vary_int.df$Reps==r & Vary_int.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int.df$Int_strength == int_strength[k] & Vary_int.df$Com_type==Com_types[com],1:3]<-DF
+          Vary_int.df2[Vary_int.df$Reps==r & Vary_int.df$Co_sensitivity==Co_sensitivityV[ct] & Vary_int.df$Int_strength == int_strength[k] & Vary_int.df$Com_type==Com_types[com],1:4]<-DF
         
           Raw_effects.df$SR[Raw_effects.df$Reps==r & Raw_effects.df$Co_sensitivity==Co_sensitivityV[ct] & Raw_effects.df$Int_strength == int_strength[k] & Raw_effects.df$Com_type==Com_types[com]]<-c(srA,srB,srAB,srAB-add.null$SR)
           Raw_effects.df$Biomass[Raw_effects.df$Reps==r & Raw_effects.df$Co_sensitivity==Co_sensitivityV[ct] & Raw_effects.df$Int_strength == int_strength[k] & Raw_effects.df$Com_type==Com_types[com]]<-c(bA,bB,bAB,bAB-add.null$Bmass)
           Raw_effects.df$Bray.Curtis[Raw_effects.df$Reps==r & Raw_effects.df$Co_sensitivity==Co_sensitivityV[ct] & Raw_effects.df$Int_strength == int_strength[k] & Raw_effects.df$Com_type==Com_types[com]]<-c(bcA,bcB,bcAB,bcAB-add.null$Bray)
+          
+          #pdf("Null models with competition.pdf",width = 11,height = 6)
+          par(mfrow=c(1,3))
+          plot(srA, type='l', lty=1, lwd=3, ylim=c(0,2), col=8, ylab="Propotion of species lost", xlab="Level of stress")
+          lines(srB, type='l',lty=1, lwd=3, col=8)
+          lines(srAB, lwd=3)
+          lines(srA+srB, col=3, lwd=3, lty=2)
+          lines(srA+srB-srA*srB,col=4, lwd=3, lty=2)
+          lines(add.null$SR,col=2, lwd=3, lty=2)
+
+          plot(bA, type='l', lty=1, lwd=3, ylim=c(0,2), col=8, ylab="Propotion of biomass lost", xlab="Level of stress", main=Com_types[com])
+          lines(bB, type='l',lty=1, lwd=3, col=8)
+          lines(bAB, lwd=3)
+          lines(bA+bB, col=3, lwd=3, lty=2)
+          lines(bA+bB-bA*bB,col=4, lwd=3, lty=2)
+          lines(add.null$Bmass,col=2, lwd=3, lty=2)
+          legend("topleft", legend = c("A","B","A+B","Additive","Multiplicative","Species specific additive"), col=c(8,8,1,3,4,2), lwd=3,lty=c(1,1,1,2,2,2), bty='n')
+          
+          plot(bcA, type='l', lty=1, lwd=3, ylim=c(0,2), col=8, ylab="Compositional change", xlab="Level of stress")
+          lines(bcB, type='l',lty=1, lwd=3, col=8)
+          lines(bcAB, lwd=3)
+          lines(bcA+bcB, col=3, lwd=3, lty=2)
+          lines(bcA+bcB-bcA*bcB,col=4, lwd=3, lty=2)
+          lines(add.null$Bray,col=2, lwd=3, lty=2)
+          par(mfrow=c(1,1))
+          #dev.off()
           }
       }}}}
 
@@ -297,9 +326,6 @@ save(Vary_int.df,Vary_int_troph.df,Vary_int.df2,Vary_int_troph.df2,Raw_effects.d
 
 ColV<-c(2,"Grey30","Dodgerblue")
 
-maxStress<-summarise(group_by(Vary_int.df,Co_sensitivity,Int_strength,Stress,Com_type),Mean=mean(SR,na.rm=T),SD=sd(SR,na.rm=T)) %>%
-  group_by(Int_strength,Com_type,Co_sensitivity) %>%
-  summarise(stressMax = Stress[which.max(abs(Mean))])
 
 pdf("./Plots/Species richness.pdf",width = 11,height=8.5)
 ggplot(summarise(group_by(Vary_int.df2,Stress,Co_sensitivity,Int_strength,Com_type),Mean=mean(SR,na.rm=T),SD=sd(SR,na.rm=T)),aes(x=Stress,y=Mean, group=Co_sensitivity, color=Co_sensitivity, fill=Co_sensitivity))+
@@ -312,25 +338,8 @@ ggplot(summarise(group_by(Vary_int.df2,Stress,Co_sensitivity,Int_strength,Com_ty
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   geom_abline(intercept=0,slope=0, linetype=2)+
   ylab("Species richness change vs. predicted")+
-  scale_y_continuous(breaks=seq(-1,1,by=0.1))+
-  geom_vline(data=maxStress,aes(xintercept=stressMax), linetype=2)
+  scale_y_continuous(breaks=seq(-1,1,by=0.1))
 dev.off()
-
-maxStress<-summarise(group_by(Vary_int.df,Co_sensitivity,Int_strength,Stress,Com_type),Mean=mean(SR,na.rm=T),SD=sd(SR,na.rm=T)) %>%
-  filter(Co_sensitivity=="Random") %>%
-  group_by(Int_strength,Com_type) %>%
-  summarise(stressMax = Stress[which.max(Mean)])
-
-ggplot(summarise(group_by(subset(Raw_effects.df,Co_sensitivity=="Random"),Stress,Int_strength,Com_type,Stressors),Mean=mean(SR,na.rm=T),SD=sd(SR,na.rm=T)),aes(x=Stress,y=Mean, group=Stressors,linetype=Stressors))+
-  geom_line(size=1.2)+
-  #geom_ribbon(aes(ymin=Mean-SD,ymax=Mean+SD),alpha=0.3)+
-  facet_grid(Com_type~Int_strength)+
-  theme_bw(base_size = 15)+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  geom_abline(intercept=0,slope=0, linetype=2)+
-  ylab("Species richness change vs. predicted")+
-  scale_y_continuous(breaks=seq(-1,1,by=0.1))+
-  geom_vline(data=maxStress,aes(xintercept=stressMax), linetype=2)
 
 pdf("./Plots/Composition.pdf",width = 11,height=8.5)
 ggplot(summarise(group_by(Vary_int.df2,Stress,Co_sensitivity,Int_strength,Com_type),Mean=mean(Bray.Curtis,na.rm=T),SD=sd(Bray.Curtis,na.rm=T)),aes(x=Stress,y=Mean, group=Co_sensitivity, color=Co_sensitivity, fill=Co_sensitivity))+
@@ -346,22 +355,6 @@ ggplot(summarise(group_by(Vary_int.df2,Stress,Co_sensitivity,Int_strength,Com_ty
   scale_y_continuous(breaks=seq(-1,1,by=0.1))
 dev.off()
 
-maxStress<-summarise(group_by(Vary_int.df,Co_sensitivity,Int_strength,Stress,Com_type),Mean=mean(Bray.Curtis,na.rm=T),SD=sd(Bray.Curtis,na.rm=T)) %>%
-  filter(Co_sensitivity=="Random") %>%
-  group_by(Int_strength,Com_type) %>%
-  summarise(stressMax = Stress[which.max(Mean)])
-
-ggplot(summarise(group_by(subset(Raw_effects.df,Co_sensitivity=="Random"),Stress,Int_strength,Com_type,Stressors),Mean=mean(Bray.Curtis,na.rm=T),SD=sd(Bray.Curtis,na.rm=T)),aes(x=Stress,y=Mean, group=Stressors,linetype=Stressors))+
-  geom_line(size=1.2)+
-  #geom_ribbon(aes(ymin=Mean-SD,ymax=Mean+SD),alpha=0.3)+
-  facet_grid(Com_type~Int_strength)+
-  theme_bw(base_size = 15)+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  geom_abline(intercept=0,slope=0, linetype=2)+
-  ylab("Species richness change vs. predicted")+
-  scale_y_continuous(breaks=seq(-1,1,by=0.1))+
-  geom_vline(data=maxStress,aes(xintercept=stressMax), linetype=2)
-
 pdf("./Plots/Biomass.pdf",width = 11,height=8.5)
 ggplot(summarise(group_by(Vary_int.df2,Stress,Co_sensitivity,Int_strength,Com_type),Mean=mean(Biomass,na.rm=T),SD=sd(Biomass,na.rm=T)),aes(x=Stress,y=Mean, group=Co_sensitivity, color=Co_sensitivity, fill=Co_sensitivity))+
   geom_line(size=1.2)+
@@ -376,21 +369,9 @@ ggplot(summarise(group_by(Vary_int.df2,Stress,Co_sensitivity,Int_strength,Com_ty
   scale_y_continuous(breaks=seq(-1,1,by=0.1))
 dev.off()
 
-maxStress<-summarise(group_by(Vary_int.df,Co_sensitivity,Int_strength,Stress,Com_type),Mean=mean(Biomass,na.rm=T),SD=sd(Biomass,na.rm=T)) %>%
-  filter(Co_sensitivity=="Random") %>%
-  group_by(Int_strength,Com_type) %>%
-  summarise(stressMax = Stress[which.max(Mean)])
 
-ggplot(summarise(group_by(subset(Raw_effects.df,Co_sensitivity=="Random"),Stress,Int_strength,Com_type,Stressors),Mean=mean(Biomass,na.rm=T),SD=sd(Biomass,na.rm=T)),aes(x=Stress,y=Mean, group=Stressors,linetype=Stressors))+
-  geom_line(size=1.2)+
-  #geom_ribbon(aes(ymin=Mean-SD,ymax=Mean+SD),alpha=0.3)+
-  facet_grid(Com_type~Int_strength)+
-  theme_bw(base_size = 15)+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  geom_abline(intercept=0,slope=0, linetype=2)+
-  ylab("Species richness change vs. predicted")+
-  scale_y_continuous(breaks=seq(-1,1,by=0.1))+
-  geom_vline(data=maxStress,aes(xintercept=stressMax), linetype=2)
+
+
 
 pdf("./Plots/Trophic species richness.pdf",width = 11,height=8.5)
 ggplot(summarise(group_by(Vary_int_troph.df2,Stress,Co_sensitivity,Int_strength,Trophic_level),Mean=mean(SR,na.rm=T),SD=sd(SR,na.rm=T)),aes(x=Stress,y=Mean, group=Co_sensitivity, color=Co_sensitivity,fill=Co_sensitivity))+

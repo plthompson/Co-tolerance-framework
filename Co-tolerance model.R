@@ -131,8 +131,7 @@ for(com in 1:length(Com_types)){
       if(sum(c(sum(solve(-BBhold,C)>0)==species,sum(solve(-btemp1,C)>=0)==species,sum(solve(-btemp2,C)>0)==species,sum(solve(-btemp3,C)>0)==species,sum(solve(-btemp4,C)>0)==species))==5) break
     }
     
-    #tapply(solve(-BBhold[,,com],C),INDEX = trophV,FUN = sum)
-    
+
     for(ct in 1:3){
       #environmental response####
       #start with sensitivity to stress
@@ -149,7 +148,6 @@ for(com in 1:length(Com_types)){
       if(ct==3){
         sensitivity1[,2]<-sensitivity1[,2]*-1
         sensitivity <- -(pnorm(sensitivity1)*(1-min_sensitivity)+min_sensitivity)*sensitivity_scaler
-        
       }
       
       for(k in 1:length(int_strength)){

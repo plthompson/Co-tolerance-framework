@@ -51,6 +51,7 @@ null_compare<-function(tseries){
   output<-output %>%
     group_by(Response,Stress) %>%
     mutate(Difference=100*abs(Change[Null_model=="Actual"])/abs(Change)) %>%
+    mutate(Difference=ifelse(is.nan(Difference),100,Difference))%>%
     mutate(Reversal = Change>0 & Change[Null_model=="Actual"]<0 | Change<0 & Change[Null_model=="Actual"]>0)
   return(output)
 }
@@ -233,11 +234,29 @@ ggplot(filter(Output,Response=="Biomass",CoTolerance=="Random"),aes(x=Stress,y=C
   theme_bw()+
   removeGrid()
 
+ggplot(filter(Output,Response=="Biomass",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
+  geom_hline(yintercept = 100,linetype=2,col=1)+
+  geom_line()+
+  facet_grid(Interactions~Stress_type,scale="free")+
+  scale_color_manual(values = ColV[-1])+
+  scale_size_manual(values = SizeV[-1])+
+  theme_bw()+
+  removeGrid()
+
 ggplot(filter(Output,Response=="Species richness",CoTolerance=="Random"),aes(x=Stress,y=Change,color=Null_model, size=Null_model))+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
+  theme_bw()+
+  removeGrid()
+
+ggplot(filter(Output,Response=="Species richness",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
+  geom_hline(yintercept = 100,linetype=2,col=1)+
+  geom_line()+
+  facet_grid(Interactions~Stress_type,scale="free")+
+  scale_color_manual(values = ColV[-1])+
+  scale_size_manual(values = SizeV[-1])+
   theme_bw()+
   removeGrid()
 

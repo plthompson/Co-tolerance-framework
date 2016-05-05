@@ -28,30 +28,29 @@ null_compare<-function(tseries){
   pA<-(rowSums(A)-sum(Control))/sum(Control)
   pB<-(rowSums(B)-sum(Control))/sum(Control)
   addM<-pA+pB
-  addM[addM<-1]<--1
+  addM[addM<(-1)]<--1
   output<-mutate(output,Additive=replace(Additive,Response=="Biomass",addM))
-  output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Biomass",pA+pB-pA*pB))
+  output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Biomass",pA+pB+(pA*pB)))
   
   pA<-(rowSums(A>0)-sum(Control>0))/sum(Control>0)
   pB<-(rowSums(B>0)-sum(Control>0))/sum(Control>0)
   addM<-pA+pB
-  addM[addM<-1]<--1
+  addM[addM<(-1)]<--1
   output<-mutate(output,Additive=replace(Additive,Response=="Species richness",addM))
-  output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Species richness",pA+pB-pA*pB))
+  output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Species richness",pA+pB+(pA*pB)))
   
   pA<-c(0,vegdist(A)[1:(nrow(A)-1)])
   pB<-c(0,vegdist(B)[1:(nrow(B)-1)])
   addM<-pA+pB
   addM[addM>1]<-1
   output<-mutate(output,Additive=replace(Additive,Response=="Composition",addM))
-  output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Composition",pA+pB-pA*pB))
+  output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Composition",pA+pB-(pA*pB)))
   
   
   output<-gather(output,key = Null_model,value=Change,Actual:Multiplicative)
   output<-output %>%
     group_by(Response,Stress) %>%
-    mutate(Difference=100*abs(Change[Null_model=="Actual"])/abs(Change)) %>%
-    mutate(Difference=ifelse(is.nan(Difference),100,Difference))%>%
+    mutate(Difference=abs(Change)-abs(Change[Null_model=="Actual"])) %>%
     mutate(Reversal = Change>0 & Change[Null_model=="Actual"]<0 | Change<0 & Change[Null_model=="Actual"]>0)
   return(output)
 }
@@ -220,8 +219,6 @@ for(st in 1:length(Stress_type)){
 
 Output$Interactions<-factor(Output$Interactions,levels=Com_types,ordered = T)
 Output$CoTolerance<-factor(Output$CoTolerance,levels=c("Positive","Random","Negative"),ordered = T)
-
-Output[Output$Stress==0,]$Difference<-100
 
 ColV<-c("grey10",brewer.pal(3,"Set1"))
 SizeV<-c(2,1,1,1)

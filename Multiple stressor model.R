@@ -229,16 +229,22 @@ ggplot(filter(Output,Response=="Biomass",CoTolerance=="Random"),aes(x=Stress,y=C
   scale_color_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
   theme_bw()+
-  removeGrid()
+  removeGrid()+
+  ylab("Biomass change")
+ggsave("./Figures/Change - biomass.pdf",width = 11, height=8.5)
+
 
 ggplot(filter(Output,Response=="Biomass",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
-  geom_hline(yintercept = 100,linetype=2,col=1)+
+  geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV[-1])+
   scale_size_manual(values = SizeV[-1])+
   theme_bw()+
-  removeGrid()
+  coord_cartesian(ylim = c(-1,1))+
+  removeGrid()+
+  ylab("Biomass difference from null model")
+ggsave("./Figures/Difference - biomass.pdf",width = 11, height=8.5)
 
 ggplot(filter(Output,Response=="Species richness",CoTolerance=="Random"),aes(x=Stress,y=Change,color=Null_model, size=Null_model))+
   geom_line()+
@@ -246,16 +252,21 @@ ggplot(filter(Output,Response=="Species richness",CoTolerance=="Random"),aes(x=S
   scale_color_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
   theme_bw()+
-  removeGrid()
+  removeGrid()+
+  ylab("Species richness change")
+ggsave("./Figures/Change - species richness.pdf",width = 11, height=8.5)
+
 
 ggplot(filter(Output,Response=="Species richness",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
-  geom_hline(yintercept = 100,linetype=2,col=1)+
+  geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV[-1])+
   scale_size_manual(values = SizeV[-1])+
   theme_bw()+
-  removeGrid()
+  removeGrid()+
+  ylab("Species richness difference from null model")
+ggsave("./Figures/Difference - species richness.pdf",width = 11, height=8.5)
 
 ggplot(filter(Output,Response=="Composition",CoTolerance=="Random"),aes(x=Stress,y=Change,color=Null_model, size=Null_model))+
   geom_line()+
@@ -263,14 +274,18 @@ ggplot(filter(Output,Response=="Composition",CoTolerance=="Random"),aes(x=Stress
   scale_color_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
   theme_bw()+
-  removeGrid()
+  removeGrid()+
+  ylab("Compositional change")
+ggsave("./Figures/Change - composition.pdf",width = 11, height=8.5)
 
 ggplot(filter(Output,Response=="Composition",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
-  geom_hline(yintercept = 100,linetype=2,col=1)+
+  geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV[-1])+
   scale_size_manual(values = SizeV[-1])+
   theme_bw()+
-  removeGrid()
+  removeGrid()+
+  ylab("Compositional change difference from null model")
+ggsave("./Figures/Difference - composition.pdf",width = 11, height=8.5)
 

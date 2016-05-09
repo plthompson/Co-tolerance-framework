@@ -22,7 +22,7 @@ null_compare<-function(tseries){
   AB_predict[AB_predict<0]<-0
   output<-mutate(output,Species_specific=replace(Species_specific,Response=="Biomass",(rowSums(AB_predict)-sum(Control))/sum(Control)))
   output<-mutate(output,Species_specific=replace(Species_specific,Response=="Species richness",(rowSums(AB_predict>0)-sum(Control>0))/sum(Control>0)))
-  output<-mutate(output,Species_specific=replace(Species_specific,Response=="Composition",  c(0,vegdist(AB_predict)[1:(nrow(AB_predict)-1)])))
+  output<-mutate(output,Species_specific=replace(Species_specific,Response=="Composition",  c(0,vegdist(AB_predict,na.rm=T)[1:(nrow(AB_predict)-1)])))
   
   pA<-(rowSums(A)-sum(Control))/sum(Control)
   pB<-(rowSums(B)-sum(Control))/sum(Control)
@@ -49,7 +49,7 @@ null_compare<-function(tseries){
   output<-gather(output,key = Null_model,value=Change,Actual:Multiplicative)
   output<-output %>%
     group_by(Response,Stress) %>%
-    mutate(Difference=abs(Change)-abs(Change[Null_model=="Actual"])) %>%
+    mutate(Difference=abs(Change[Null_model=="Actual"])-abs(Change)) %>%
     mutate(Reversal = Change>0 & Change[Null_model=="Actual"]<0 | Change<0 & Change[Null_model=="Actual"]>0)
   return(output)
 }
@@ -312,6 +312,17 @@ ggplot(filter(Output_means,Response=="Composition",CoTolerance=="Random",Null_mo
 ggsave("./Figures/Difference - composition.pdf",width = 11, height=8.5)
 
 #Species interaction figures####
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
+  #geom_hline(yintercept = 0,linetype=2,col=1)+
+  #geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
+  geom_line(size=0.7)+
+  facet_grid(Response~Stress_type,scale="free")+
+  scale_color_manual(values = ColV)+
+  scale_fill_manual(values = ColV)+
+  theme_bw()+
+  removeGrid()+
+  ylab("Difference from null model")
+
 ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+

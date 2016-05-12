@@ -100,6 +100,10 @@ ggplot(sens.df,aes(x=A,y=B))+
 ggsave("./Figures/Species interactions - Fig 1.png",height=8.5,width=11)
 
 #Figure 2####
+library(ggplot2)
+library(RColorBrewer)
+library(ggExtra)
+library(dplyr)
 load("Workspace/Multistress.RData")
 Output_means$Response<-factor(Output_means$Response,levels=c("Species richness","Biomass", "Composition"), ordered=T)
 
@@ -110,7 +114,7 @@ ColV<-c("grey30",brewer.pal(3,"Set1"))
 ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   #geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_manual(values = ColV,name="")+
   scale_fill_manual(values = ColV,name="")+
@@ -125,7 +129,7 @@ ggsave("./Figures/Species interactions - Fig 2.pdf",width = 11, height=8.5)
 ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_manual(values = ColV,name="")+
   scale_fill_manual(values = ColV,name="")+
@@ -137,7 +141,7 @@ ggsave("./Figures/Species interactions - Fig 3.pdf",width = 11, height=8.5)
 ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
   scale_fill_manual(values = ColV)+
@@ -149,7 +153,7 @@ ggsave("./Figures/Species interactions - Fig 3a.pdf",width = 11, height=8.5)
 ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
   scale_fill_manual(values = ColV)+
@@ -165,7 +169,7 @@ Output_means_trophic$Response<-factor(Output_means_trophic$Response,levels=c("Sp
 ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Trophic_level, fill=Trophic_level,group=interaction(Trophic_level,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   #geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_brewer(palette = "Set2",name="")+
   scale_fill_brewer(palette = "Set2",name="")+
@@ -179,7 +183,7 @@ ggsave("./Figures/Species interactions - Fig 4.pdf",width = 11, height=8.5)
 ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Trophic_level, fill=Trophic_level,group=Trophic_level))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_brewer(palette = "Set2",name="")+
   scale_fill_brewer(palette = "Set2",name="")+
@@ -193,7 +197,7 @@ ggsave("./Figures/Species interactions - Fig 5.pdf",width = 11, height=8.5)
 ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Reversal_mean*1,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Reversal_lower,ymax=Reversal_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
   scale_fill_manual(values = ColV)+

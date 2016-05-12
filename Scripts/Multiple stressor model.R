@@ -5,24 +5,31 @@ library(ggExtra)
 library(RColorBrewer)
 library(dplyr)
 library(tidyr)
-library(data.table)
 
 null_compare<-function(tseries){
   A<-tseries[,,"A"]
   B<-tseries[,,"B"]
   AB<-tseries[,,"AB"]
   Control<-tseries[1,,"A"]
-  output<-data.frame(Stress=stressV[samp_stress],Response=rep(c("Biomass","Species richness","Composition"),each=length(samp_stress)),Actual=NA,Species_specific=NA,Additive=NA,Multiplicative=NA)
+  output<-data.frame(Stress=stressV[samp_stress],Response=rep(c("Biomass","Species richness","Composition"),each=length(samp_stress)),Actual=NA,Species_specific=NA,Additive=NA,Multiplicative=NA,A_only=NA,B_only=NA)
   
   output<-mutate(output,Actual=replace(Actual,Response=="Biomass",(rowSums(AB)-sum(Control))/sum(Control)))
   output<-mutate(output,Actual=replace(Actual,Response=="Species richness",(rowSums(AB>0)-sum(Control>0))/sum(Control>0)))
-  output<-mutate(output,Actual=replace(Actual,Response=="Composition",  c(0,vegdist(AB)[1:(nrow(AB)-1)])))
+  output<-mutate(output,Actual=replace(Actual,Response=="Composition",  c(0,vegdist(AB,na.rm=T)[1:(nrow(AB)-1)])))
+  
+  output<-mutate(output,A_only=replace(A_only,Response=="Biomass",(rowSums(A)-sum(Control))/sum(Control)))
+  output<-mutate(output,A_only=replace(A_only,Response=="Species richness",(rowSums(A>0)-sum(Control>0))/sum(Control>0)))
+  output<-mutate(output,A_only=replace(A_only,Response=="Composition",  c(0,vegdist(A,na.rm=T)[1:(nrow(A)-1)])))
+  
+  output<-mutate(output,B_only=replace(B_only,Response=="Biomass",(rowSums(B)-sum(Control))/sum(Control)))
+  output<-mutate(output,B_only=replace(B_only,Response=="Species richness",(rowSums(B>0)-sum(Control>0))/sum(Control>0)))
+  output<-mutate(output,B_only=replace(B_only,Response=="Composition",  c(0,vegdist(B,na.rm=T)[1:(nrow(B)-1)])))
   
   AB_predict<-rep(Control,each=nrow(A))+(A-rep(Control,each=nrow(A)))+(B-rep(Control,each=nrow(A)))
   AB_predict[AB_predict<0]<-0
   output<-mutate(output,Species_specific=replace(Species_specific,Response=="Biomass",(rowSums(AB_predict)-sum(Control))/sum(Control)))
   output<-mutate(output,Species_specific=replace(Species_specific,Response=="Species richness",(rowSums(AB_predict>0)-sum(Control>0))/sum(Control>0)))
-  output<-mutate(output,Species_specific=replace(Species_specific,Response=="Composition",  c(0,vegdist(AB_predict,na.rm=T)[1:(nrow(AB_predict)-1)])))
+  output<-mutate(output,Species_specific=replace(Species_specific,Response=="Composition",  c(0,vegdist(AB_predict)[1:(nrow(AB_predict)-1)])))
   
   pA<-(rowSums(A)-sum(Control))/sum(Control)
   pB<-(rowSums(B)-sum(Control))/sum(Control)
@@ -46,19 +53,20 @@ null_compare<-function(tseries){
   output<-mutate(output,Multiplicative=replace(Multiplicative,Response=="Composition",pA+pB-(pA*pB)))
   
   
-  output<-gather(output,key = Null_model,value=Change,Actual:Multiplicative)
+  output<-gather(output,key = Null_model,value=Change,Actual:B_only)
   output<-output %>%
     group_by(Response,Stress) %>%
-    mutate(Difference=abs(Change[Null_model=="Actual"])-abs(Change)) %>%
+    mutate(Difference=abs(Change[Null_model=="Actual"])-abs(Change))%>%
     mutate(Reversal = Change>0 & Change[Null_model=="Actual"]<0 | Change<0 & Change[Null_model=="Actual"]>0)
   return(output)
 }
 
 nStressors<-2
-reps<-3
+reps<-100
 Co_sensitivityV<-c("Random","Positive","Negative")
 Com_types<-c("No interactions","Competitive","Facilitative","Trophic")
 Stress_type<-c("-,-","-,+","+,+","mixed")
+int_strength<-seq(0,1,by=0.25)
 
 #environmental change####
 stress_increase<-6000
@@ -195,7 +203,11 @@ for(r in 1:reps){
         Env_resp[,"AB"]<-sensitivity[,1]*stressV[l]+sensitivity[,2]*stressV[l]
         
         for(com in 1:length(Com_types)){
+          if(com<4){
           Xt<-X[,,com]*exp(C+BB[,,com]%*%X[,,com]+Env_resp)
+          } else {
+            Xt<-X[,,com]*exp(C_troph+BB[,,com]%*%X[,,com]+Env_resp)
+          }
           Xt[Xt<0.01]<-0
           X[,,com]<-Xt
         }
@@ -210,6 +222,19 @@ for(r in 1:reps){
         hold$CoTolerance<-c("Random","Positive","Negative")[ct]
         hold$Stress_type<-Stress_type[st]
         hold$Rep<-r
+        if(com==4){ 
+          for(tlevel in 1:3){
+            hold2<-null_compare(Xsave[,trophV==unique(trophV)[tlevel],,com])
+            hold2$Trophic_level<-unique(trophV)[tlevel]
+            hold2$CoTolerance<-c("Random","Positive","Negative")[ct]
+            hold2$Stress_type<-Stress_type[st]
+            hold2$Rep<-r
+            if(r==1 & ct==1 & st==1 & tlevel==1){
+              Output_trophic<-hold2
+            } else{
+              Output_trophic<-rbind(Output_trophic,hold2)}
+          }
+        }
         if(r==1 & ct==1 & st==1 & com==1 ){
           Output<-hold
         } else{
@@ -221,24 +246,30 @@ for(r in 1:reps){
 
 Output$Interactions<-factor(Output$Interactions,levels=Com_types,ordered = T)
 Output$CoTolerance<-factor(Output$CoTolerance,levels=c("Positive","Random","Negative"),ordered = T)
+Output$Reversal<-as.numeric(Output$Reversal)
+
+Output_means<-Output%>%
+  group_by(Stress,Response,Null_model,Interactions,CoTolerance,Stress_type)%>%
+  summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)),-Rep)
+
+Output_trophic$Trophic_level<-factor(Output_trophic$Trophic_level,levels=unique(trophV),ordered = T)
+Output_trophic$CoTolerance<-factor(Output_trophic$CoTolerance,levels=c("Positive","Random","Negative"),ordered = T)
+Output_trophic$Reversal<-as.numeric(Output_trophic$Reversal)
+
+Output_means_trophic<-Output_trophic%>%
+  group_by(Stress,Response,Null_model,CoTolerance,Stress_type,Trophic_level)%>%
+  summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)),-Rep)
+
+
+save(Output_means,Output_means_trophic,file="Multistress.RData")
 
 ColV<-c("grey30",brewer.pal(3,"Set1"))
 SizeV<-c(2,1,1,1)
 
-Output$Reversal<-as.numeric(Output$Reversal)
-
-Output_means<-data.table(Output)%>%
-  group_by(Stress,Response,Null_model,Interactions,CoTolerance,Stress_type)%>%
-  summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)),-Rep)
-
-
-
-ggplot(filter(Output_means,Response=="Biomass",CoTolerance=="Random"),aes(x=Stress,y=Change_mean,color=Null_model,fill=Null_model, size=Null_model))+
-  geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
+ggplot(filter(Output_means,Response=="Biomass",CoTolerance=="Random"),aes(x=Stress,y=Change_mean,color=Null_model, size=Null_model))+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
   theme_bw()+
   removeGrid()+
@@ -246,13 +277,11 @@ ggplot(filter(Output_means,Response=="Biomass",CoTolerance=="Random"),aes(x=Stre
 ggsave("./Figures/Change - biomass.pdf",width = 11, height=8.5)
 
 
-ggplot(filter(Output_means,Response=="Biomass",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference_mean,color=Null_model, fill=Null_model,size=Null_model))+
+ggplot(filter(Output_means,Response=="Biomass",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV[-1])+
-  scale_fill_manual(values = ColV[-1])+
   scale_size_manual(values = SizeV[-1])+
   theme_bw()+
   coord_cartesian(ylim = c(-1,1))+
@@ -260,12 +289,10 @@ ggplot(filter(Output_means,Response=="Biomass",CoTolerance=="Random",Null_model!
   ylab("Biomass difference from null model")
 ggsave("./Figures/Difference - biomass.pdf",width = 11, height=8.5)
 
-ggplot(filter(Output_means,Response=="Species richness",CoTolerance=="Random"),aes(x=Stress,y=Change_mean,color=Null_model,fill=Null_model, size=Null_model))+
-  geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
+ggplot(filter(Output_means,Response=="Species richness",CoTolerance=="Random"),aes(x=Stress,y=Change,color=Null_model, size=Null_model))+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
   theme_bw()+
   removeGrid()+
@@ -273,38 +300,32 @@ ggplot(filter(Output_means,Response=="Species richness",CoTolerance=="Random"),a
 ggsave("./Figures/Change - species richness.pdf",width = 11, height=8.5)
 
 
-ggplot(filter(Output_means,Response=="Species richness",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference_mean,color=Null_model, fill=Null_model,size=Null_model))+
+ggplot(filter(Output_means,Response=="Species richness",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV[-1])+
-  scale_fill_manual(values = ColV[-1])+
   scale_size_manual(values = SizeV[-1])+
   theme_bw()+
   removeGrid()+
   ylab("Species richness difference from null model")
 ggsave("./Figures/Difference - species richness.pdf",width = 11, height=8.5)
 
-ggplot(filter(Output_means,Response=="Composition",CoTolerance=="Random"),aes(x=Stress,y=Change_mean,color=Null_model,fill=Null_model, size=Null_model))+
-  geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
+ggplot(filter(Output_means,Response=="Composition",CoTolerance=="Random"),aes(x=Stress,y=Change,color=Null_model, size=Null_model))+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
   scale_size_manual(values = SizeV)+
   theme_bw()+
   removeGrid()+
   ylab("Compositional change")
 ggsave("./Figures/Change - composition.pdf",width = 11, height=8.5)
 
-ggplot(filter(Output_means,Response=="Composition",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference_mean,color=Null_model, fill=Null_model,size=Null_model))+
+ggplot(filter(Output_means,Response=="Composition",CoTolerance=="Random",Null_model!="Actual"),aes(x=Stress,y=Difference,color=Null_model, size=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line()+
   facet_grid(Interactions~Stress_type,scale="free")+
   scale_color_manual(values = ColV[-1])+
-  scale_fill_manual(values = ColV[-1])+
   scale_size_manual(values = SizeV[-1])+
   theme_bw()+
   removeGrid()+
@@ -312,65 +333,23 @@ ggplot(filter(Output_means,Response=="Composition",CoTolerance=="Random",Null_mo
 ggsave("./Figures/Difference - composition.pdf",width = 11, height=8.5)
 
 #Species interaction figures####
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
-  #geom_hline(yintercept = 0,linetype=2,col=1)+
-  #geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions,group=Interactions))+
+  geom_hline(yintercept = 0,linetype=2,col=1)+
+  geom_line()+
   facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
+  #scale_color_manual(values = ColV[-1])+
+  #scale_size_manual(values = SizeV[-1])+
   theme_bw()+
   removeGrid()+
   ylab("Difference from null model")
 
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Reversal_mean*1,color=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
+  geom_line()+
   facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
+  #scale_color_manual(values = ColV[-1])+
+  #scale_size_manual(values = SizeV[-1])+
   theme_bw()+
   removeGrid()+
   ylab("Difference from null model")
-ggsave("./Figures/Species interactions - difference.pdf",width = 11, height=8.5)
-
-ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
-  geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
-  facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
-  theme_bw()+
-  removeGrid()+
-  ylab("Difference from null model")
-ggsave("./Figures/Species interactions - difference (neg coTol).pdf",width = 11, height=8.5)
-
-ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
-  geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
-  facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
-  theme_bw()+
-  removeGrid()+
-  ylab("Difference from null model")
-ggsave("./Figures/Species interactions - difference (pos coTol).pdf",width = 11, height=8.5)
-
-
-
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Reversal_mean*1,color=Interactions, fill=Interactions,group=Interactions))+
-  geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Reversal_lower,ymax=Reversal_upper),alpha=0.2,color=NA)+
-  geom_line(size=0.7)+
-  facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
-  theme_bw()+
-  removeGrid()+
-  ylab("Frequency of reversals")
-ggsave("./Figures/Species interactions - reversals.pdf",width = 11, height=8.5)
-
 

@@ -106,14 +106,16 @@ library(ggExtra)
 library(dplyr)
 load("Workspace/Multistress.RData")
 Output_means$Response<-factor(Output_means$Response,levels=c("Species richness","Biomass", "Composition"), ordered=T)
+Output_means$Null_model<-factor(Output_means$Null_model,levels=c("A_only","B_only","Actual","Additive","Multiplicative","Species_specific"), ordered=T)
+Output_means$Null_model<-factor(Output_means$Null_model,labels=c("A_only","B_only","Actual","Additive","Multiplicative","Compositional"))
 
 lineV2<-c(1,2,1,1)
 
 #Figure 2####
 ColV<-c("grey30",brewer.pal(3,"Set1"))
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  #geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
+  geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.15,color=NA)+
   geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_manual(values = ColV,name="")+
@@ -126,7 +128,7 @@ ggsave("./Figures/Species interactions - Fig 2.pdf",width = 11, height=8.5)
 
 
 #Figure 3####
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+

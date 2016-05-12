@@ -170,7 +170,7 @@ Output_means_trophic$Response<-factor(Output_means_trophic$Response,levels=c("Sp
 
 ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Trophic_level, fill=Trophic_level,group=interaction(Trophic_level,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  #geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.2,color=NA)+
+  geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.15,color=NA)+
   geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_brewer(palette = "Set2",name="")+
@@ -179,12 +179,12 @@ ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_sp
   theme_bw()+
   removeGrid()+
   ylab("Change from control")
-ggsave("./Figures/Species interactions - Fig 4.pdf",width = 11, height=8.5)
+ggsave("./Figures/Species interactions - Fig 4a.pdf",width = 11, height=8.5)
 
 
 ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Trophic_level, fill=Trophic_level,group=Trophic_level))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
+  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.15,color=NA)+
   geom_line(size=1)+
   facet_grid(Response~Stress_type,scale="free")+
   scale_color_brewer(palette = "Set2",name="")+
@@ -192,11 +192,11 @@ ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_sp
   theme_bw()+
   removeGrid()+
   ylab("Difference from null model")
-ggsave("./Figures/Species interactions - Fig 5.pdf",width = 11, height=8.5)
+ggsave("./Figures/Species interactions - Fig 4.pdf",width = 11, height=8.5)
 
 
-#Supplemental####
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Reversal_mean*1,color=Interactions, fill=Interactions,group=Interactions))+
+#Figure 5####
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional", Response=="Biomass"),aes(x=Stress,y=Reversal_mean*1,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Reversal_lower,ymax=Reversal_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
@@ -206,5 +206,5 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Species_specific")
   theme_bw()+
   removeGrid()+
   ylab("Frequency of reversals")
-ggsave("./Figures/Species interactions - reversals.pdf",width = 11, height=8.5)
+ggsave("./Figures/Species interactions - Fig. 5.pdf",width = 11, height=3.5)
 

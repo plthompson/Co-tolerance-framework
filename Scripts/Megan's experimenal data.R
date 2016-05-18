@@ -4,7 +4,7 @@ require(ggplot2)
 require(vegan)
 
 null_compare<-function(Control,A,B,AB){
-  output<-data.frame(Response=c("Biomass","Species richness","Composition"),Actual=NA,Species_specific=NA,Additive=NA,Multiplicative=NA)
+  output<-data.frame(Response=c("Biomass","Species richness","Composition"),Actual=NA,Compositional=NA,Additive=NA,Multiplicative=NA)
   
   output$Actual[1]<-(sum(AB)-sum(Control))/sum(Control)
   output$Actual[2]<-(sum(AB>0)-sum(Control>0))/sum(Control>0)
@@ -12,9 +12,9 @@ null_compare<-function(Control,A,B,AB){
   
   AB_predict<-Control+(A-Control)+(B-Control)
   AB_predict[AB_predict<0]<-0
-  output$Species_specific[1]<-(sum(AB_predict)-sum(Control))/sum(Control)
-  output$Species_specific[2]<-(sum(AB_predict>0)-sum(Control>0))/sum(Control>0)
-  output$Species_specific[3]<-vegdist(rbind(Control,AB_predict))
+  output$Compositional[1]<-(sum(AB_predict)-sum(Control))/sum(Control)
+  output$Compositional[2]<-(sum(AB_predict>0)-sum(Control>0))/sum(Control>0)
+  output$Compositional[3]<-vegdist(rbind(Control,AB_predict))
   
   pA<-(sum(A)-sum(Control))/sum(Control)
   pB<-(sum(B)-sum(Control))/sum(Control)
@@ -34,14 +34,14 @@ null_compare<-function(Control,A,B,AB){
   output<-gather(output,key = Null_model,value=Change,Actual:Multiplicative)
   output<-output %>%
     group_by(Response) %>%
-    mutate(Difference=abs(Change)-abs(Change[Null_model=="Actual"])) %>%
+    mutate(Difference=abs(Change[Null_model=="Actual"])-abs(Change))%>%
     mutate(Reversal = Change>0 & Change[Null_model=="Actual"]<0 | Change<0 & Change[Null_model=="Actual"]>0)
   
   return(output)
 }
 
-#McClellan Experiment####
-MM_data<-read.csv("./Experimental data/McClellan experiment.csv")
+#MacClennan Experiment####
+MM_data<-read.csv("./Experimental data/MacClennan experiment.csv")
 head(MM_data)
 
 MM_wide<-spread(MM_data[,-c(5:6)],Species,Biomass,fill = 0)
@@ -135,11 +135,9 @@ output_full<-rbind(output_full,output)
 output_full$Syn_vs_Ant <- "NA"
 output_full$Syn_vs_Ant[output_full$Difference>0 & output_full$Reversal == F] <- "Synergy"
 output_full$Syn_vs_Ant[output_full$Difference<0 & output_full$Reversal == F] <- "Antagonism"
-output_full$Syn_vs_Ant[output_full$Difference<0 & output_full$Reversal == T] <- "Reverse antagonism"
-output_full$Syn_vs_Ant[output_full$Difference>0 & output_full$Reversal == T] <- "Reverse synergy"
+output_full$Syn_vs_Ant[output_full$Reversal == T] <- "Reversal"
 output_full$Syn_vs_Ant[output_full$Difference>-0.05 & output_full$Difference<0.05 & output_full$Reversal == F] <- "Match"
-output_full$Syn_vs_Ant[output_full$Difference>-0.05 & output_full$Difference<0.05 & output_full$Reversal == T] <- "Reverse match"
-output_full$Syn_vs_Ant<-factor(output_full$Syn_vs_Ant,levels = rev(c("Reverse synergy","Reverse match","Reverse antagonism","Antagonism","Match","Synergy")),ordered = T)
+output_full$Syn_vs_Ant<-factor(output_full$Syn_vs_Ant,levels = rev(c("Reversal","Antagonism","Match","Synergy")),ordered = T)
 
 pdf("./Figures/Lake null model contrast actual change.pdf",width = 11,height = 8.5)
 ggplot(output_full,aes(x=Lake,y=Change, group=interaction(lake,Null_model),color=Null_model,pch=Reversal))+
@@ -166,16 +164,19 @@ Syn_counts<-output_full%>%
   group_by(Response,Null_model,Syn_vs_Ant) %>%
   summarise(Counts = n())
 
+Syn_counts$Response<-factor(Syn_counts$Response,levels=c("Species richness","Biomass","Composition"),ordered = T)
+Syn_counts$Null_model<-factor(Syn_counts$Null_model,levels=c("Additive","Multiplicative","Compositional"),ordered = T)
 
-pdf("./Figures/Synergy vs. antagonism.pdf",width = 13,height = 9)
+pdf("./Figures/Synergy vs. antagonism.pdf",width = 11,height = 8.5)
 ggplot(filter(Syn_counts,Null_model!="Actual"),aes(x=Null_model,y=Counts,fill=Syn_vs_Ant))+
   facet_wrap(~Response)+
   #scale_fill_brewer(type='div',palette=8,name="",direction = -1)+
   scale_fill_manual(values = c("#d7191c","#1a9641","#2c7bb6","grey","lightgreen","black"),name="")+
   geom_bar(stat="identity",color="black")+
-  theme_bw(base_size = 16)+
+  theme_bw(base_size = 12)+
   xlab("Null model")+
-  scale_y_continuous(breaks=seq(1:9))
+  scale_y_continuous(breaks=seq(1:9))+
+  xlab("Null model")
 dev.off()
 
 ggplot(filter(output_full,Null_model!="Actual"),aes(x=Null_model,y=Lake,fill=Syn_vs_Ant))+

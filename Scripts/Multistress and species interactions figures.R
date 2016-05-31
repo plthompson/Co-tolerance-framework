@@ -113,7 +113,7 @@ lineV2<-c(1,2,1,1)
 
 #Figure 2####
 ColV<-c("grey30",brewer.pal(3,"Set1"))
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional" | Null_model=="Actual",Response != "Composition"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.15,color=NA)+
   geom_line(size=1)+
@@ -128,7 +128,7 @@ ggsave("./Figures/Species interactions - Fig 2.pdf",width = 11, height=8.5)
 
 
 #Figure 3####
-ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
+ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
@@ -140,7 +140,7 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional"),ae
   ylab("Difference from null model")
 ggsave("./Figures/Species interactions - Fig 3.pdf",width = 11, height=8.5)
 
-ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
+ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
@@ -152,7 +152,7 @@ ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Species_specific
   ylab("Difference from null model")
 ggsave("./Figures/Species interactions - Fig 3a.pdf",width = 11, height=8.5)
 
-ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
+ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
@@ -168,7 +168,7 @@ ggsave("./Figures/Species interactions - Fig 3b.pdf",width = 11, height=8.5)
 #Figure 4####
 Output_means_trophic$Response<-factor(Output_means_trophic$Response,levels=c("Species richness","Biomass", "Composition"), ordered=T)
 
-ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual"),aes(x=Stress,y=Change_mean,color=Trophic_level, fill=Trophic_level,group=interaction(Trophic_level,Null_model), linetype=Null_model))+
+ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific" | Null_model=="Actual",Response != "Composition"),aes(x=Stress,y=Change_mean,color=Trophic_level, fill=Trophic_level,group=interaction(Trophic_level,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.15,color=NA)+
   geom_line(size=1)+
@@ -182,7 +182,7 @@ ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_sp
 ggsave("./Figures/Species interactions - Fig 4a.pdf",width = 11, height=8.5)
 
 
-ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific"),aes(x=Stress,y=Difference_mean,color=Trophic_level, fill=Trophic_level,group=Trophic_level))+
+ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_specific",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Trophic_level, fill=Trophic_level,group=Trophic_level))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.15,color=NA)+
   geom_line(size=1)+

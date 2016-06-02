@@ -8,6 +8,12 @@ library(tidyr)
 library(data.table)
 
 load("Workspace/Multistress.RData")
+Output_means<-Output_means%>%
+  ungroup()%>%
+  mutate(CoTolerance=replace(CoTolerance,CoTolerance=="Negative" & Stress_type =="-,+","hold"),
+         CoTolerance=replace(CoTolerance,CoTolerance=="Positive" & Stress_type =="-,+","Negative"),
+         CoTolerance=replace(CoTolerance,is.na(CoTolerance) & Stress_type =="-,+","Positive"))
+
 Output_means$Response<-factor(Output_means$Response,levels=c("Species richness","Biomass", "Composition"), ordered=T)
 Output_means$Null_model<-factor(Output_means$Null_model,levels=c("A_only","B_only","Actual","Additive","Multiplicative","Species_specific"), ordered=T)
 Output_means$Null_model<-factor(Output_means$Null_model,labels=c("A","B","AB","Additive","Multiplicative","Compositional"))

@@ -1,4 +1,10 @@
 #Figure 1####
+library(MASS)
+library(dplyr)
+library(ggplot2)
+library(ggExtra)
+library(RColorBrewer)
+library(viridis)
 Stress_type<-c("-,-","-,+","+,+","mixed")
 species<-20
 
@@ -54,6 +60,11 @@ for(st in 1:length(Stress_type)){
 
 sens.df$ct<-factor(sens.df$ct,levels=Co_sensitivityV,ordered = T)
 
+sens.df2<-sens.df%>%
+  mutate(ct=replace(ct,ct=="Negative" & st =="-,+","hold"),
+         ct=replace(ct,ct=="Positive" & st =="-,+","Negative"),
+         ct=replace(ct,is.na(ct) & st =="-,+","Positive"))
+
 
 line.df<-data.frame(x=seq(from = -0.005,to = 0.005,length=1000),y=-0.0055)
 
@@ -83,7 +94,7 @@ poly_list <- lapply(1:n_polys, function(p){
 
 poly_data <- do.call(rbind, poly_list)
 
-ggplot(sens.df,aes(x=A,y=B))+
+ggplot(sens.df2,aes(x=A,y=B))+
   facet_grid(ct~st)+
   geom_polygon(data=poly_data, aes(x=x,y=y, group=fill_id,fill=fill_id),alpha=1) +
   geom_polygon(data=poly_data, aes(y=x,x=y, group=fill_id,fill=fill_id),alpha=0.5)+
@@ -94,7 +105,7 @@ ggplot(sens.df,aes(x=A,y=B))+
   removeGrid()+
   geom_hline(yintercept = 0, linetype=2)+
   geom_vline(xintercept = 0, linetype=2)+
-  geom_point(data = sens.df,aes(x=A,y=B))+
+  geom_point(data = sens.df2,aes(x=A,y=B))+
   ylab("Response to stressor B")+
   xlab("Response to stressor A")
 ggsave("./Figures/Species interactions - Fig 1.png",height=8.5,width=11)
@@ -105,6 +116,12 @@ library(RColorBrewer)
 library(ggExtra)
 library(dplyr)
 load("Workspace/Multistress.RData")
+Output_means<-Output_means%>%
+  ungroup()%>%
+  mutate(CoTolerance=replace(CoTolerance,CoTolerance=="Negative" & Stress_type =="-,+","hold"),
+         CoTolerance=replace(CoTolerance,CoTolerance=="Positive" & Stress_type =="-,+","Negative"),
+         CoTolerance=replace(CoTolerance,is.na(CoTolerance) & Stress_type =="-,+","Positive"))
+
 Output_means$Response<-factor(Output_means$Response,levels=c("Species richness","Biomass", "Composition"), ordered=T)
 Output_means$Null_model<-factor(Output_means$Null_model,levels=c("A_only","B_only","Actual","Additive","Multiplicative","Species_specific"), ordered=T)
 Output_means$Null_model<-factor(Output_means$Null_model,labels=c("A_only","B_only","Actual","Additive","Multiplicative","Compositional"))
@@ -150,7 +167,7 @@ ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Compositional",R
   theme_bw()+
   removeGrid()+
   ylab("Difference from null model")
-ggsave("./Figures/Species interactions - Fig 3a.pdf",width = 11, height=8.5)
+ggsave("./Figures/Species interactions - Fig 3a - neg.pdf",width = 11, height=8.5)
 
 ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
@@ -162,7 +179,7 @@ ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Compositional",R
   theme_bw()+
   removeGrid()+
   ylab("Difference from null model")
-ggsave("./Figures/Species interactions - Fig 3b.pdf",width = 11, height=8.5)
+ggsave("./Figures/Species interactions - Fig 3b - pos.pdf",width = 11, height=8.5)
 
 
 #Figure 4####

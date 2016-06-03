@@ -41,7 +41,7 @@ null_compare<-function(Control,A,B,AB){
 }
 
 #MacClennan Experiment####
-MM_data<-read.csv("./Experimental data/MacClennan experiment.csv")
+MM_data<-read.csv("./Experimental data/McClennan experiment.csv")
 head(MM_data)
 
 MM_wide<-spread(MM_data[,-c(5:6)],Species,Biomass,fill = 0)
@@ -186,5 +186,12 @@ ggplot(filter(output_full,Null_model!="Actual"),aes(x=Null_model,y=Lake,fill=Syn
   geom_tile()+
   theme_bw(base_size = 16)+
   xlab("Null model")
+
+is.same<-function(x){x[1]==x}
+
+output_full%>%
+  filter(Null_model=="Additive" | Null_model=="Compositional", Response=="Species richness")%>%
+  group_by(Lake)%>%
+  summarise(Same=is.same(Syn_vs_Ant)[2])
 
 

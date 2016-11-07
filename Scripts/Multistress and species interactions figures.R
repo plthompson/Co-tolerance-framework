@@ -143,7 +143,6 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional" | N
   ylab("Change from control")
 ggsave("./Figures/Species interactions - Fig 2.pdf",width = 11, height=8.5)
 
-
 #Figure 3####
 ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
@@ -157,29 +156,33 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional",Res
   ylab("Difference from null model")
 ggsave("./Figures/Species interactions - Fig 3.pdf",width = 11, height=8.5)
 
-ggplot(filter(Output_means,CoTolerance=="Negative",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
-  geom_hline(yintercept = 0,linetype=2,col=1)+
-  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
-  geom_line(size=1)+
-  facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
-  theme_bw()+
-  removeGrid()+
-  ylab("Difference from null model")
-ggsave("./Figures/Species interactions - Fig 3a - neg.pdf",width = 11, height=8.5)
+ColV2<-ColV[c(2,1,3)]
 
-ggplot(filter(Output_means,CoTolerance=="Positive",Null_model=="Compositional",Response != "Composition"),aes(x=Stress,y=Difference_mean,color=Interactions, fill=Interactions,group=Interactions))+
+ggplot(filter(Output_means,Null_model=="Compositional",Response == "Species richness"),aes(x=Stress,y=Difference_mean,color=CoTolerance, fill=CoTolerance,group=CoTolerance))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
-  facet_grid(Response~Stress_type,scale="free")+
-  scale_color_manual(values = ColV)+
-  scale_fill_manual(values = ColV)+
+  facet_grid(Interactions~Stress_type)+
+  scale_color_manual(values = ColV2)+
+  scale_fill_manual(values = ColV2)+
   theme_bw()+
   removeGrid()+
   ylab("Difference from null model")
-ggsave("./Figures/Species interactions - Fig 3b - pos.pdf",width = 11, height=8.5)
+ggsave("./Figures/Species interactions - Fig 3a - richness.pdf",width = 11, height=8.5)
+
+
+ggplot(filter(Output_means,Null_model=="Compositional",Response == "Biomass"),aes(x=Stress,y=Difference_mean,color=CoTolerance, fill=CoTolerance,group=CoTolerance))+
+  geom_hline(yintercept = 0,linetype=2,col=1)+
+  geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
+  geom_line(size=1)+
+  facet_grid(Interactions~Stress_type)+
+  scale_color_manual(values = ColV2)+
+  scale_fill_manual(values = ColV2)+
+  theme_bw()+
+  removeGrid()+
+  ylab("Difference from null model")
+ggsave("./Figures/Species interactions - Fig 3b - biomass.pdf",width = 11, height=8.5)
+
 
 
 #Figure 4####

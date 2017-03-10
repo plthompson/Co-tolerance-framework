@@ -140,7 +140,8 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional" | N
   scale_linetype(name="",labels=c("Realized","Predicted"))+
   theme_bw()+
   removeGrid()+
-  ylab("Change from control")
+  ylab("Change from control")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig 2.pdf",width = 11, height=8.5)
 
 #Figure 3####
@@ -153,7 +154,8 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional",Res
   scale_fill_manual(values = ColV,name="")+
   theme_bw()+
   removeGrid()+
-  ylab("Difference from null model")
+  ylab("Difference from null model")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig 3.pdf",width = 11, height=8.5)
 
 ColV2<-ColV[c(2,1,3)]
@@ -167,7 +169,8 @@ ggplot(filter(Output_means,Null_model=="Compositional",Response == "Species rich
   scale_fill_manual(values = ColV2)+
   theme_bw()+
   removeGrid()+
-  ylab("Difference from null model")
+  ylab("Difference from null model")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig 3a - richness.pdf",width = 11, height=8.5)
 
 
@@ -180,7 +183,8 @@ ggplot(filter(Output_means,Null_model=="Compositional",Response == "Biomass"),ae
   scale_fill_manual(values = ColV2)+
   theme_bw()+
   removeGrid()+
-  ylab("Difference from null model")
+  ylab("Difference from null model")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig 3b - biomass.pdf",width = 11, height=8.5)
 
 
@@ -198,7 +202,8 @@ ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_sp
   scale_linetype(name="",labels=c("Realized","Predicted"))+
   theme_bw()+
   removeGrid()+
-  ylab("Change from control")
+  ylab("Change from control")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig 4a.pdf",width = 11, height=8.5)
 
 
@@ -211,7 +216,8 @@ ggplot(filter(Output_means_trophic,CoTolerance=="Random",Null_model=="Species_sp
   scale_fill_brewer(palette = "Set2",name="")+
   theme_bw()+
   removeGrid()+
-  ylab("Difference from null model")
+  ylab("Difference from null model")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig 4.pdf",width = 11, height=8.5)
 
 
@@ -225,6 +231,7 @@ ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional", Re
   scale_fill_manual(values = ColV)+
   theme_bw()+
   removeGrid()+
-  ylab("Frequency of reversals")
+  ylab("Frequency of reversals")+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
 ggsave("./Figures/Species interactions - Fig. 5.pdf",width = 11, height=3.5)
 

@@ -29,8 +29,9 @@ ggplot(filter(Output_means,Interactions=="No interactions",Response=="Species ri
   scale_linetype_manual(values=LineV,name="")+
   theme_bw()+
   removeGrid()+
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))+
   ylab("Species richness change from control")
-ggsave("./Figures/Null model - Richness.pdf",width = 11, height=8.5)
+ggsave("./Figures/Null model - Figure 2.pdf",width = 11, height=8.5)
 
 
 ggplot(filter(Output_means,Interactions=="No interactions",Response=="Biomass"),aes(x=Stress,y=Change_mean,color=Null_model, fill=Null_model,group=Null_model, linetype=Null_model))+
@@ -42,8 +43,9 @@ ggplot(filter(Output_means,Interactions=="No interactions",Response=="Biomass"),
   scale_linetype_manual(values=LineV,name="")+
   theme_bw()+
   removeGrid()+
-  ylab("Biomass change from control")
-ggsave("./Figures/Null model - Biomass.pdf",width = 11, height=8.5)
+  xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))+
+  ylab("Communuty biomass change from control")
+ggsave("./Figures/Null model - Figure 4.pdf",width = 11, height=8.5)
 
 
 ggplot(filter(Output_means,Interactions=="No interactions",Response=="Composition"),aes(x=Stress,y=Change_mean,color=Null_model, fill=Null_model,group=Null_model, linetype=Null_model))+

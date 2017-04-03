@@ -30,8 +30,8 @@ ggplot(filter(Output_means,Interactions=="No interactions",Response=="Species ri
   theme_bw()+
   removeGrid()+
   xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))+
-  ylab("Species richness change from control")
-ggsave("./Figures/Null model - Figure 2.pdf",width = 11, height=8.5)
+  ylab("Species richness relative to control community")
+ggsave("./Figures/Null model - Figure 2.pdf",width = 8, height=6)
 
 
 ggplot(filter(Output_means,Interactions=="No interactions",Response=="Biomass"),aes(x=Stress,y=Change_mean,color=Null_model, fill=Null_model,group=Null_model, linetype=Null_model))+
@@ -44,19 +44,6 @@ ggplot(filter(Output_means,Interactions=="No interactions",Response=="Biomass"),
   theme_bw()+
   removeGrid()+
   xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))+
-  ylab("Communuty biomass change from control")
-ggsave("./Figures/Null model - Figure 4.pdf",width = 11, height=8.5)
-
-
-ggplot(filter(Output_means,Interactions=="No interactions",Response=="Composition"),aes(x=Stress,y=Change_mean,color=Null_model, fill=Null_model,group=Null_model, linetype=Null_model))+
-  geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.15,color=NA)+
-  geom_line(size=1)+
-  facet_grid(Stress_type~CoTolerance,scale="free")+
-  scale_color_manual(values = ColV,name="")+
-  scale_fill_manual(values = ColV,name="")+
-  scale_linetype_manual(values=LineV,name="")+
-  theme_bw()+
-  removeGrid()+
-  ylab("Compositional change from control")
-ggsave("./Figures/Null model - Composition.pdf",width = 11, height=8.5)
+  ylab("Community biomass relative to control community")
+ggsave("./Figures/Null model - Figure 4.pdf",width = 8, height=6)
 

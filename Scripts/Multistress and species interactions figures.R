@@ -115,7 +115,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(ggExtra)
 library(dplyr)
-load("Workspace/Multistress.RData")
+load("./Multistress.RData")
 Output_means<-Output_means%>%
   ungroup()%>%
   mutate(CoTolerance=replace(CoTolerance,CoTolerance=="Negative" & Stress_type =="-,+","hold"),
@@ -129,7 +129,7 @@ Output_means$Null_model<-factor(Output_means$Null_model,labels=c("A_only","B_onl
 lineV2<-c(1,2,1,1)
 
 #Figure 1####
-ColV<-c("grey30",brewer.pal(3,"Set1"))
+ColV<-c("grey30",brewer.pal(4,"Set1"))
 ggplot(filter(Output_means,CoTolerance=="Random",Null_model=="Compositional" | Null_model=="Actual",Response != "Composition"),aes(x=Stress,y=Change_mean,color=Interactions, fill=Interactions,group=interaction(Interactions,Null_model), linetype=Null_model))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Change_lower,ymax=Change_upper),alpha=0.15,color=NA)+
@@ -164,28 +164,28 @@ ggplot(filter(Output_means,Null_model=="Compositional",Response == "Species rich
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
-  facet_grid(Interactions~Stress_type)+
+  facet_grid(Interactions~Stress_type,scale="free_y")+
   scale_color_manual(values = ColV2)+
   scale_fill_manual(values = ColV2)+
   theme_bw()+
   removeGrid()+
   ylab(expression(paste("Difference from null model (",italic(D["AB"]),")",sep="")))+
   xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
-ggsave("./Figures/Species interactions - Fig. S2.pdf",width = 8, height=6)
+ggsave("./Figures/Species interactions - Fig. S2.pdf",width = 8, height=8)
 
 
 ggplot(filter(Output_means,Null_model=="Compositional",Response == "Biomass"),aes(x=Stress,y=Difference_mean,color=CoTolerance, fill=CoTolerance,group=CoTolerance))+
   geom_hline(yintercept = 0,linetype=2,col=1)+
   geom_ribbon(aes(ymin=Difference_lower,ymax=Difference_upper),alpha=0.2,color=NA)+
   geom_line(size=1)+
-  facet_grid(Interactions~Stress_type)+
+  facet_grid(Interactions~Stress_type, scale="free_y")+
   scale_color_manual(values = ColV2)+
   scale_fill_manual(values = ColV2)+
   theme_bw()+
   removeGrid()+
   ylab(expression(paste("Difference from null model (",italic(D["AB"]),")",sep="")))+
   xlab(expression(paste("Stressor magnitude (",italic("m"),")",sep="")))
-ggsave("./Figures/Species interactions - Fig. S3.pdf",width = 8, height=6)
+ggsave("./Figures/Species interactions - Fig. S3.pdf",width = 8, height=8)
 
 
 

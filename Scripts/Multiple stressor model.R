@@ -64,7 +64,7 @@ null_compare<-function(tseries){
 nStressors<-2
 reps<-100
 Co_sensitivityV<-c("Random","Positive","Negative")
-Com_types<-c("No interactions","Competitive","Facilitative","Trophic")
+Com_types<-c("No interactions","Competitive","Facilitative","Trophic","Mixed")
 Stress_type<-c("-,-","-,+","+,+","mixed")
 int_strength<-seq(0,1,by=0.25)
 
@@ -82,15 +82,12 @@ trophV<-factor(c(rep("Plants",nprey),rep("Herbivores",nherb),rep("Predators",npr
 
 samp_stress<-seq(1,Tmax,by=stress_increase)
 
-
-
 #weight by species number
 weight=1/(species*4)
 
 #growth rate
 C<-rep(0.1,species)
 C_troph<-c(rep(0.1,nprey),rep(0,species-nprey))
-
 
 for(r in 1:reps){
   #make communities####
@@ -148,6 +145,37 @@ for(r in 1:reps){
   }
   BB[,,"Trophic"]<-BI
   
+  #mixed
+  repeat{
+    b11<--0.10
+    b11_pos<-0.15
+    b12<--0.15#-0.3
+    b21<-0.1
+    b23<--.1
+    b32<- 0.07#.08
+    bdiag1<--.2
+    bdiag2<--.2
+    
+    #tritrophic BB Matrix####
+    B11<-b11*matrix(runif(nprey*nprey),nprey,nprey)
+    mutuals<-rbinom(n = ((nprey*nprey-nprey)/2),size = 1,prob = 0.2)
+    B11[upper.tri(B11)][mutuals]<-B11[upper.tri(B11)][mutuals]*-b11_pos
+    B11[lower.tri(B11)][mutuals]<-B11[lower.tri(B11)][mutuals]*-b11_pos
+    B12<-b12*matrix(runif(nprey*nherb),nprey,nherb)
+    B13<-matrix(0,nprey,npred)
+    B21<-b21*matrix(runif(nherb*nprey),nherb,nprey)
+    B22<-matrix(0,nherb,nherb)
+    B23<-b23*matrix(runif(nherb*npred),nherb,npred)
+    B31<-matrix(0,npred,nprey)
+    B32<-b32*matrix(runif(npred*nherb),npred,nherb)
+    B33<-matrix(0,npred,npred)
+    BI<-rbind(cbind(B11 ,B12, B13),cbind(B21,B22, B23),cbind(B31, B32, B33))
+    diag(BI)<-bdiag1
+    diag(BI[(nprey+nherb+1):species,(nprey+nherb+1):species])<-bdiag2
+    if(sum(solve(-BI,C_troph)>0)==species) break
+  }
+  BB[,,"Mixed"]<-BI
+  
   for(st in 1:length(Stress_type)){
     print(paste("Rep",r, "-",st))
     for(ct in 1:3){
@@ -192,6 +220,7 @@ for(r in 1:reps){
       X[,,"Competitive"]<-solve(-BB[,,"Competitive"],C)
       X[,,"Facilitative"]<-solve(-BB[,,"Facilitative"],C)
       X[,,"Trophic"]<-solve(-BB[,,"Trophic"],C_troph)
+      X[,,"Mixed"]<-solve(-BB[,,"Mixed"],C_troph)
       
       Xsave<-array(NA,dim=c(length(samp_stress),species,nStressors+1,length(Com_types)),dimnames = list(samp_stress,1:species,c("A","B","AB"),Com_types))
       Xsave[1,,,]<-X
